@@ -1,4 +1,5 @@
 import plotly.express as px
+import plotly
 import plotly.graph_objects as go
 import plotly.io as pio
 import numpy as np
@@ -244,8 +245,8 @@ class Figure3D:
         )
 
         if show:
-            self.fig.show()
-
+            # self.fig.show()
+            plotly.offline.plot(self.fig)
         return self.fig
 
 
