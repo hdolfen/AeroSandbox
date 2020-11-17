@@ -2,6 +2,60 @@ import copy
 
 from aerosandbox import *
 from aerosandbox.library.airfoils import e216, naca0008
+from aerosandbox.geometry.common import cosspace
+import casadi as cas
+
+
+def naca_4(m, p, t, n_points_per_side=100):
+    # https://en.wikipedia.org/wiki/NACA_airfoil#Four-digit_series
+
+    # Make uncambered coordinates
+    x_t = cosspace(0, 1, n_points_per_side)  # Generate some cosine-spaced points
+    y_t = 5 * t * (
+            + 0.2969 * x_t ** 0.5
+            - 0.1260 * x_t
+            - 0.3516 * x_t ** 2
+            + 0.2843 * x_t ** 3
+            - 0.1015 * x_t ** 4  # 0.1015 is original, #0.1036 for sharp TE
+    )
+
+    if p == 0:
+        p = 0.5  # prevents divide by zero errors for things like naca0012's.
+
+    # Get camber
+    y_c = cas.if_else(
+        x_t <= p,
+        m / p ** 2 * (2 * p * x_t - x_t ** 2),
+        m / (1 - p) ** 2 * ((1 - 2 * p) + 2 * p * x_t - x_t ** 2)
+    )
+
+    # Get camber slope
+    dycdx = cas.if_else(
+        x_t <= p,
+        2 * m / p ** 2 * (p - x_t),
+        2 * m / (1 - p) ** 2 * (p - x_t)
+    )
+    theta = cas.atan(dycdx)
+
+    # Combine everything
+    x_u = x_t - y_t * cas.sin(theta)
+    x_l = x_t + y_t * cas.sin(theta)
+    y_u = y_c + y_t * cas.cos(theta)
+    y_l = y_c - y_t * cas.cos(theta)
+
+    # Flip upper surface so it's back to front
+    x_u, y_u = x_u[::-1, :], y_u[::-1, :]
+
+    # Trim 1 point from lower surface so there's no overlap
+    x_l, y_l = x_l[1:], y_l[1:]
+
+    x = cas.vertcat(x_u, x_l)
+    y = cas.vertcat(y_u, y_l)
+
+    coordinates = np.array(cas.horzcat(x, y))
+
+    return coordinates
+
 
 opti = cas.Opti()  # Initialize an analysis/optimization environment
 
@@ -20,13 +74,14 @@ airplane = Airplane(
             z_le=0,  # Coordinates of the wing's leading edge
             symmetric=True,
             xsecs=[  # The wing's cross ("X") sections
+                # Airfoils are blended between a given XSec and the next one.
                 WingXSec(  # Root
                     x_le=0,  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
                     y_le=0,  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
                     z_le=0,  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
                     chord=0.18,
                     twist=2,  # degrees
-                    airfoil=e216,  # Airfoils are blended between a given XSec and the next one.
+                    airfoil=Airfoil(coordinates=naca_4(0.04, 0.4, 0.42)),
                     control_surface_type='symmetric',
                     # Flap # Control surfaces are applied between a given XSec and the next one.
                     control_surface_deflection=0,  # degrees
@@ -37,7 +92,7 @@ airplane = Airplane(
                     z_le=0,
                     chord=0.16,
                     twist=0,
-                    airfoil=e216,
+                    airfoil=Airfoil(coordinates=naca_4(0.04, 0.4, 0.42)),
                     control_surface_type='asymmetric',  # Aileron
                     control_surface_deflection=0,
                 ),
