@@ -107,7 +107,7 @@ airplane = Airplane(
         )
     ]
 )
-ap = Casll1(  # Set up the AeroProblem
+ap = Casvlm1(  # Set up the AeroProblem
     airplane=airplane,
     op_point=OperatingPoint(
         density=1.225,  # kg/m^3
@@ -138,7 +138,7 @@ ap_sol.substitute_solution(sol)
 ap_sol.draw()  # Generates
 
 print("CL:", ap_sol.CL)
-print("CD:", ap_sol.CD)
+print("CDi:", ap_sol.CDi)
 print("CY:", ap_sol.CY)
 print("Cl:", ap_sol.Cl)
 print("Cm:", ap_sol.Cm)
