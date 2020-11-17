@@ -173,7 +173,7 @@ s_opts["mu_strategy"] = "adaptive"
 opti.solver('ipopt', p_opts, s_opts)
 
 # Solve
-alphas = np.linspace(-15,15,31)
+alphas = np.linspace(-15, 15, 31)
 ap_sols = []
 
 for alpha in alphas:

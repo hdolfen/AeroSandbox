@@ -4,7 +4,7 @@ from aerosandbox import *
 from aerosandbox.library.airfoils import e216, naca0008
 from aerosandbox.geometry.common import cosspace
 import casadi as cas
-
+import numpy as np
 
 def naca_4(m, p, t, n_points_per_side=100):
     # https://en.wikipedia.org/wiki/NACA_airfoil#Four-digit_series
@@ -181,16 +181,25 @@ ap = Casvlm1(  # Set up the AeroProblem
 # Solver options
 opti.solver('ipopt')
 
-# Solve
-sol = opti.solve()
+t_sweep = np.linspace(0.1, 0.6, 11)
+ap_sols = []
+for t in t_sweep:
+    tmp_airfoil = Airfoil(coordinates=naca_4(0.04, 0.4, t))
+    ap.airplane.wings[0].xsecs[0].airfoil = tmp_airfoil
+    ap.setup(verbose=False)
+    # Solve
+    sol = opti.solve()
+    # Create solved object
+    ap_sol = copy.deepcopy(ap)
+    ap_sol.substitute_solution(sol)
+    ap_sols.append(ap_sol)
 
 # Postprocess
 
-# Create solved object
-ap_sol = copy.deepcopy(ap)
-ap_sol.substitute_solution(sol)
 
-ap_sol.draw()  # Generates
+
+
+# ap_sol.draw()  # Generates
 
 print("CL:", ap_sol.CL)
 print("CDi:", ap_sol.CDi)
