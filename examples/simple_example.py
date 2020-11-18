@@ -167,7 +167,7 @@ ap = Casvlm1(  # Set up the AeroProblem
     op_point=OperatingPoint(
         density=1.225,  # kg/m^3
         viscosity=1.81e-5,  # kg/m-s
-        velocity=10,  # m/s
+        velocity=9.434427500100066,  # m/s
         mach=0,  # Freestream mach number
         alpha=5,  # In degrees
         beta=0,  # In degrees
@@ -183,16 +183,20 @@ opti.solver('ipopt')
 
 t_sweep = np.linspace(0.1, 0.6, 11)
 ap_sols = []
-for t in t_sweep:
-    tmp_airfoil = Airfoil(coordinates=naca_4(0.04, 0.4, t))
-    ap.airplane.wings[0].xsecs[0].airfoil = tmp_airfoil
-    ap.setup(verbose=False)
-    # Solve
-    sol = opti.solve()
-    # Create solved object
-    ap_sol = copy.deepcopy(ap)
-    ap_sol.substitute_solution(sol)
-    ap_sols.append(ap_sol)
+# for t in t_sweep:
+#     tmp_airfoil = Airfoil(coordinates=naca_4(0.04, 0.4, t))
+#     ap.airplane.wings[0].xsecs[0].airfoil = tmp_airfoil
+#     ap.setup(verbose=False)
+#     # Solve
+#     sol = opti.solve()
+#     # Create solved object
+#     ap_sol = copy.deepcopy(ap)
+#     ap_sol.substitute_solution(sol)
+#     ap_sols.append(ap_sol)
+
+sol = opti.solve()
+ap_sol = copy.deepcopy(ap)
+ap_sol.substitute_solution(sol)
 
 # Postprocess
 
