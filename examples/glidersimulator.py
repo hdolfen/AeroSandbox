@@ -210,7 +210,9 @@ class GliderSimulator:
         """Modifies a list of design variables of the airplane to the elements of x."""
         self.airplane.wings[0].xsecs[0].airfoil = Airfoil(coordinates=naca_4(x[0], x[1], x[2]))
         self.airplane.wings[0].xsecs[1].airfoil = Airfoil(coordinates=naca_4(x[0], x[1], x[2]))
-        self.airplane.wings[0].xsecs[2].airfoil = Airfoil(coordinates=naca_4(x[0], x[1], x[2]))
+        # self.airplane.wings[0].xsecs[2].airfoil = Airfoil(coordinates=naca_4(x[0], x[1], x[2]))
+        self.airplane.wings[0].xsecs[1].y_le = x[2]
+
         self.ap.op_point.alpha = x[3]
         self.ap.setup(verbose=False)
 
@@ -242,10 +244,4 @@ class GliderSimulator:
 
 if __name__ == '__main__':
     simulator = GliderSimulator()
-    output = simulator.simulate((0.04, 0.4, 0.12, 5))
-    print(output)
-    output = simulator.simulate((0.04, 0.5, 0.12, 5))
-    print(output)
-    output = simulator.simulate((0.04, 0.4, 0.12, 5))
-    print(output)
-
+    output = simulator.simulate((0.04, 0.4, 0.5, 5))
