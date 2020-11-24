@@ -79,6 +79,8 @@ class GliderSimulator:
     def __init__(self):
         self.opti = cas.Opti()  # Initialize an analysis/optimization environment
         self.opti.solver('ipopt')
+        self.design_history = []
+        self.output_history = []
 
         self.weight = 2 * 9.81  # Weight corresponding to 2 kg
 
@@ -213,6 +215,11 @@ class GliderSimulator:
         self.ap.setup(verbose=False)
 
     def simulate(self, x):
+        for i in range(len(self.design_history)):
+            if np.all(x == self.design_history[i]):
+                return self.output_history[i]
+
+        self.design_history.append(x)
         with HiddenPrints(True):
             self.modify(x)
             sol = self.opti.solve()
@@ -223,6 +230,7 @@ class GliderSimulator:
         drag = sol.value(self.ap.drag_force_induced)
         beta = np.arctan(cl / cd)
         v = np.sqrt(self.weight * self.ap.op_point.velocity ** 2 / (lift * np.cos(beta) + drag * np.sin(beta)))
+        self.output_history.append((cl, cd, cm, v))
         return cl, cd, cm, v
 
     def area(self, x):
@@ -231,6 +239,13 @@ class GliderSimulator:
     def Ixx(self, x):
         return Airfoil(coordinates=naca_4(x[0], x[1], x[2])).Ixx()
 
+
 if __name__ == '__main__':
     simulator = GliderSimulator()
     output = simulator.simulate((0.04, 0.4, 0.12, 5))
+    print(output)
+    output = simulator.simulate((0.04, 0.5, 0.12, 5))
+    print(output)
+    output = simulator.simulate((0.04, 0.4, 0.12, 5))
+    print(output)
+
