@@ -68,13 +68,17 @@ def Cl_flat_plate(alpha, Re_c):
 
 def CL_over_Cl(AR, mach=0, sweep=0):
     """
-    Returns the ratio of 3D lift_force coefficient (with compressibility) to 2D lift_force (incompressible) coefficient.
+    Returns the ratio of 3D lift coefficient (with compressibility) to 2D lift coefficient (incompressible).
     :param AR: Aspect ratio
     :param mach: Mach number
     :param sweep: Sweep angle [deg]
     :return:
     """
-    beta = cas.sqrt(1 - mach ** 2)
+    beta = cas.if_else(
+        1 - mach ** 2 >= 0,
+        cas.sqrt(1 - mach**2),
+        0
+    )
     sweep_rad = sweep * np.pi / 180
     # return AR / (AR + 2) # Equivalent to equation in Drela's FVA in incompressible, 2*pi*alpha limit.
     # return AR / (2 + cas.sqrt(4 + AR ** 2))  # more theoretically sound at low AR
@@ -182,7 +186,7 @@ def Cd_profile_e216(alpha, Re_c):
 
 
 def Cd_wave_e216(Cl, mach, sweep=0.):
-    """
+    r"""
     A curve fit I did to Eppler 216 airfoil data.
     Within -0.4 < CL < 0.75 and 0 < mach < ~0.9, has R^2 = 0.9982.
     See: C:\Projects\GitHub\firefly_aerodynamics\MSES Interface\analysis\e216
@@ -278,7 +282,7 @@ def Cd_profile_rae2822(alpha, Re_c):
 
 
 def Cd_wave_rae2822(Cl, mach, sweep=0.):
-    """
+    r"""
     A curve fit I did to RAE2822 airfoil data.
     Within -0.4 < CL < 0.75 and 0 < mach < ~0.9, has R^2 = 0.9982.
     See: C:\Projects\GitHub\firefly_aerodynamics\MSES Interface\analysis\rae2822
@@ -403,7 +407,7 @@ def firefly_CLA_and_CDA_fuse_hybrid(  # TODO remove
 
     CLA = CLA_slender_body + CLA_crossflow
 
-    """
+    r"""
     Zero-lift_force drag_force
     Model derived from high-fidelity data at: C:\Projects\GitHub\firefly_aerodynamics\Design_Opt\studies\Circular Firefly Fuse CFD\Zero-Lift Drag
     """
@@ -430,7 +434,7 @@ def firefly_CLA_and_CDA_fuse_hybrid(  # TODO remove
             (fuse_length * fuse_diameter) / c[8]
     )
 
-    """
+    r"""
     Assumes a ring-shaped wake projection into the Trefftz plane with a sinusoidal circulation distribution.
     This results in a uniform grad(phi) within the ring in the Trefftz plane.
     Derivation at C:\Projects\GitHub\firefly_aerodynamics\Gists and Ideas\Ring Wing Potential Flow
