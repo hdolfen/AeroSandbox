@@ -75,7 +75,7 @@ class HiddenPrints:
             sys.stdout = self._original_stdout
 
 
-class Simulator:
+class GliderSimulator:
     def __init__(self):
         self.opti = cas.Opti()  # Initialize an analysis/optimization environment
         self.opti.solver('ipopt')
@@ -221,11 +221,16 @@ class Simulator:
         cm = sol.value(self.ap.Cm)
         lift = sol.value(self.ap.lift_force)
         drag = sol.value(self.ap.drag_force_induced)
-        beta = np.arctan(sol.value(drag / lift))
+        beta = np.arctan(cl / cd)
         v = np.sqrt(self.weight * self.ap.op_point.velocity ** 2 / (lift * np.cos(beta) + drag * np.sin(beta)))
         return cl, cd, cm, v
 
+    def area(self, x):
+        return Airfoil(coordinates=naca_4(x[0], x[1], x[2])).area()
+
+    def Ixx(self, x):
+        return Airfoil(coordinates=naca_4(x[0], x[1], x[2])).Ixx()
 
 if __name__ == '__main__':
-    simulator = Simulator()
+    simulator = GliderSimulator()
     output = simulator.simulate((0.04, 0.4, 0.12, 5))
