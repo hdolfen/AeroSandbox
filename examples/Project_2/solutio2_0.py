@@ -123,5 +123,17 @@ simulator = Simulator(obj)
 
 res_4 = differential_evolution(simulator.simulate, bounds, args={'verbose': True}, workers=-1)
 
-simulator.reset()
-res_5 = dual_annealing(simulator.simulate, bounds, callback=simulator.callback)
+# simulator.reset()
+# res_5 = dual_annealing(simulator.simulate, bounds, callback=simulator.callback)
+
+
+def obj_nm(x):
+    if np.any(x < bounds[:,0]) or np.any( x > bounds[:, 1]):
+        return np.inf
+    else:
+        return obj(x)
+
+
+simulator = Simulator(obj_nm)
+
+res_6 = minimize(simulator.simulate, x0, method="Nelder-mead", callback=simulator.callback())
