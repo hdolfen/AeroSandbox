@@ -10,15 +10,15 @@ from pyDOE2 import fullfact
 
 
 glider_simulator = GliderSimulator()
-x0 = np.array((0.2, 0.2, 0.2))
+x0 = np.array((0.19, 0.18, 0.17))
 names = ["chord_mid_1", "chord_mid_2", "chord_mid_3"]
 
+# Design of experiments full factorial
+print("=== \033[1mDesign of experiments\033[0m ===")
 
-# Full factorial first
 levels = 10
 
-F = np.array((np.linspace(0.1, 0.60, levels),
-              np.linspace(0.05, 0.20, levels),
+F = np.array((np.linspace(0.05, 0.20, levels),
               np.linspace(0.05, 0.20, levels),
               np.linspace(0.05, 0.20, levels)))
 n = F.shape[0]
@@ -83,12 +83,13 @@ bounds = [(0.05, 0.20),
 
 def con(x):
     output = glider_simulator.simulate(x)
-    return 15 - output[0]
+    return output[0]
 
 
-n_con = {'type': 'ineq', 'fun': con}
+n_con = {'type': 'ineq', 'fun': lambda x: con(x) - 15}
 
-res_1 = minimize(simulator.simulate, x0, method='SLSQP', bounds=bounds, constraints=n_con, callback=simulator.callback)
+res_1 = minimize(simulator.simulate, x0, method='SLSQP', bounds=bounds, constraints=n_con, callback=simulator.callback,
+                 tol=1e-8, options={'ftol': 1e-8})
 
 print("\nAttempt with COBYLA method")
 
@@ -98,19 +99,14 @@ n_con = [{'type': 'ineq', 'fun': lambda x: x[0] - 0.05},
          {'type': 'ineq', 'fun': lambda x: 0.2 - x[0]},
          {'type': 'ineq', 'fun': lambda x: 0.2 - x[1]},
          {'type': 'ineq', 'fun': lambda x: 0.2 - x[2]},
-         {'type': 'ineq', 'fun': con}]
+         {'type': 'ineq', 'fun': lambda x: con(x) - 15}]
 
 simulator.reset()
 
-res_2 = minimize(simulator.simulate, x0, args={'verbose': True}, method='COBYLA', constraints=n_con, tol=1e-6)
+res_2 = minimize(simulator.simulate, x0, args=((), {'verbose': True},), method='COBYLA', constraints=n_con, tol=1e-8,
+                 options={'rhobeg': 1e-4})
 
 print("\nAttempt with trust-constr method")
-
-
-def con(x):
-    output = glider_simulator.simulate(x)
-    return output[0]
-
 
 n_con = NonlinearConstraint(con, (15,), (np.inf,))
 simulator.reset()
@@ -121,31 +117,30 @@ res_3 = minimize(simulator.simulate, x0, method='trust-constr', bounds=bounds, c
 print("\nAttempt with differential evolution method")
 
 
-# def obj(x):
-#     output = glider_simulator.simulate(x)
-#     if output[0] < 15:
-#         return np.inf
-#     else:
-#         return output[1]
-#
-#
-# simulator = Simulator(obj)
-# res_4 = differential_evolution(simulator.simulate, bounds, args={'verbose': True}, workers=-1)
+def obj_con(x):
+    output = glider_simulator.simulate(x)
+    if output[0] < 15:
+        return np.inf
+    else:
+        return output[1]
 
-print("\nAttempt with dual annealing method")
-# simulator.reset()
-# res_5 = dual_annealing(simulator.simulate, bounds, callback=simulator.callback)
 
+simulator = Simulator(obj_con)
+res_4 = differential_evolution(simulator.simulate, bounds, args=((), {'verbose': True}), workers=-1)
+
+print("\nAttempt with dual annealing method")  # Very slow
+simulator.reset()
+res_5 = dual_annealing(simulator.simulate, bounds, callback=simulator.callback)
 
 print("\nAttempt with Nelder-Mead simplex method")
 
 
-def obj_nm(x):
-    if np.any(x < bounds[:, 0]) or np.any(x > bounds[:, 1]):
+def obj_con_bound(x):
+    if np.any(x < np.array(bounds)[:, 0]) or np.any(x > np.array(bounds)[:, 1]):
         return np.inf
     else:
         return obj(x)
 
 
-simulator = Simulator(obj_nm)
+simulator = Simulator(obj_con_bound)
 res_6 = minimize(simulator.simulate, x0, method="Nelder-mead", callback=simulator.callback)
