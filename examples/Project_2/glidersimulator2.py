@@ -198,16 +198,20 @@ class GliderSimulator:
 
         return lift, drag, cm
 
-    def area(self, x):
+    def airfoil_area(self, x):
         return Airfoil(coordinates=naca_4(x[0], x[1], x[2])).area()
 
-    def Ixx(self, x):
+    def airfoil_Ixx(self, x):
         return Airfoil(coordinates=naca_4(x[0], x[1], x[2])).Ixx()
 
     def draw(self):
         self.ap.draw()
 
+    def aspect_ratio(self):
+        ar = self.airplane.wings[0].aspect_ratio()
+        return float(ar)
+
 if __name__ == '__main__':
     simulator = GliderSimulator()
-    output = simulator.simulate((0.5, 0.18, 0.18, 0.18))
+    output = simulator.simulate((0.18, 0.18, 0.18))
     simulator.draw()
