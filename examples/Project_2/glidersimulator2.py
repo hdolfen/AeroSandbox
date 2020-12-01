@@ -7,7 +7,7 @@ from aerosandbox.aerodynamics import Casvlm1
 from aerosandbox.performance import OperatingPoint
 import casadi as cas
 import numpy as np
-import copy
+
 
 def naca_4(m, p, t, n_points_per_side=100):
     # https://en.wikipedia.org/wiki/NACA_airfoil#Four-digit_series
@@ -186,13 +186,9 @@ class GliderSimulator:
         with HiddenPrints(True):
             self.modify(x)
             sol = self.opti.solve()
-        cl = sol.value(self.ap.CL)
-        cd = sol.value(self.ap.CDi)
         cm = sol.value(self.ap.Cm)
         lift = sol.value(self.ap.lift_force)
         drag = sol.value(self.ap.drag_force_induced)
-        beta = np.arctan(cl / cd)
-        # v = np.sqrt(self.weight * self.ap.op_point.velocity ** 2 / (lift * np.cos(beta) + drag * np.sin(beta)))
         self.output_history.append((lift, drag, cm))
         self.ap.substitute_solution(sol)
 
