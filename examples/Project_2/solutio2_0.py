@@ -10,8 +10,8 @@ from pyDOE2 import fullfact
 
 
 glider_simulator = GliderSimulator()
-x0 = [0.2, 0.2, 0.2]
-names = ["y_mid_1", "chord_mid_1", "chord_mid_2", "chord_mid_3"]
+x0 = np.array((0.2, 0.2, 0.2))
+names = ["chord_mid_1", "chord_mid_2", "chord_mid_3"]
 
 
 # Full factorial first
@@ -60,11 +60,13 @@ for j in range(n):
 M_effects = np.diff(M, axis=1)
 for j in range(n):
     plt.figure(f"{names[j]}_effect")
-    plt.bar((F[0, 1:] + F [0, :-1]) / 2, M_effects[j, :], width=np.diff(F[0, :]) / 2)
+    plt.bar((F[0, 1:] + F[0, :-1]) / 2, M_effects[j, :], width=np.diff(F[0, :]) / 2)
 
 plt.figure("Average effect over range")
 plt.bar(names, np.mean(M_effects, axis=1))
 
+print("=== \033[1mStarted optimization\033[0m ===")
+print("\nAttempt with SLSQP method")
 
 
 def obj(x):
@@ -72,69 +74,78 @@ def obj(x):
     return output[1]
 
 
+simulator = Simulator(obj)
+
+bounds = [(0.05, 0.20),
+          (0.05, 0.20),
+          (0.05, 0.20)]
+
+
+def con(x):
+    output = glider_simulator.simulate(x)
+    return 15 - output[0]
+
+
+n_con = {'type': 'ineq', 'fun': con}
+
+res_1 = minimize(simulator.simulate, x0, method='SLSQP', bounds=bounds, constraints=n_con, callback=simulator.callback)
+
+print("\nAttempt with COBYLA method")
+
+n_con = [{'type': 'ineq', 'fun': lambda x: x[0] - 0.05},
+         {'type': 'ineq', 'fun': lambda x: x[1] - 0.05},
+         {'type': 'ineq', 'fun': lambda x: x[2] - 0.05},
+         {'type': 'ineq', 'fun': lambda x: 0.2 - x[0]},
+         {'type': 'ineq', 'fun': lambda x: 0.2 - x[1]},
+         {'type': 'ineq', 'fun': lambda x: 0.2 - x[2]},
+         {'type': 'ineq', 'fun': con}]
+
+simulator.reset()
+
+res_2 = minimize(simulator.simulate, x0, args={'verbose': True}, method='COBYLA', constraints=n_con, tol=1e-6)
+
+print("\nAttempt with trust-constr method")
+
+
 def con(x):
     output = glider_simulator.simulate(x)
     return output[0]
 
-simulator = Simulator(obj)
-
-print("Started optimization")
-
 
 n_con = NonlinearConstraint(con, (15,), (np.inf,))
-# bounds = [(0.1, 0.60),
-#          (0.05, 0.20),
-#          (0.05, 0.20),
-#          (0.05, 0.20)]
-bounds = [(0.05, 0.20),
-         (0.05, 0.20),
-         (0.05, 0.20)]
-
-
-res_1 = minimize(simulator.simulate, x0, method='SLSQP', bounds=bounds,
-               constraints=n_con, callback=simulator.callback)
-
 simulator.reset()
-res_2 = minimize(simulator.simulate, x0, method='trust-constr', bounds=bounds,
-               constraints=n_con, callback=simulator.callback)
+res_3 = minimize(simulator.simulate, x0, method='trust-constr', bounds=bounds, constraints=n_con,
+                 callback=simulator.callback)
 
 
-def con(x):
-    output = glider_simulator.simulate(x)
-    return (*x, output[0])
+print("\nAttempt with differential evolution method")
 
 
+# def obj(x):
+#     output = glider_simulator.simulate(x)
+#     if output[0] < 15:
+#         return np.inf
+#     else:
+#         return output[1]
+#
+#
+# simulator = Simulator(obj)
+# res_4 = differential_evolution(simulator.simulate, bounds, args={'verbose': True}, workers=-1)
 
-n_con = NonlinearConstraint(con, (0.05, 0.05, 0.05, 15), (0.20, 0.20, 0.20, np.inf))
-simulator.reset()
-
-res_3 = minimize(simulator.simulate, x0, args={'verbose': True}, method='COBYLA',
-               constraints=n_con, tol=1e-6)
-
-
-def obj(x):
-    output = glider_simulator.simulate(x)
-    if output[0] < 15:
-        return np.inf
-    else:
-        return output[1]
-
-
-simulator = Simulator(obj)
-
-res_4 = differential_evolution(simulator.simulate, bounds, args={'verbose': True}, workers=-1)
-
+print("\nAttempt with dual annealing method")
 # simulator.reset()
 # res_5 = dual_annealing(simulator.simulate, bounds, callback=simulator.callback)
 
 
+print("\nAttempt with Nelder-Mead simplex method")
+
+
 def obj_nm(x):
-    if np.any(x < bounds[:,0]) or np.any( x > bounds[:, 1]):
+    if np.any(x < bounds[:, 0]) or np.any(x > bounds[:, 1]):
         return np.inf
     else:
         return obj(x)
 
 
 simulator = Simulator(obj_nm)
-
-res_6 = minimize(simulator.simulate, x0, method="Nelder-mead", callback=simulator.callback())
+res_6 = minimize(simulator.simulate, x0, method="Nelder-mead", callback=simulator.callback)
