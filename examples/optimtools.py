@@ -25,11 +25,11 @@ class Simulator:
         self.list_callback_inp = []
         self.list_callback_res = []
 
-    def simulate(self, x, verbose=False):
+    def simulate(self, x, args=(), verbose=False):
         """Executes the actual simulation and returns the result, while
         updating the lists too. Pass to optimizer without arguments or
         parentheses."""
-        result = self.f(x) # the actual evaluation of the function
+        result = self.f(x, *args) # the actual evaluation of the function
         if not self.num_calls:
             self.decreasing_list_calls_inp.append(x)
             self.decreasing_list_calls_res.append(result)
