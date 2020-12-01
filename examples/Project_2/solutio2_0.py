@@ -9,7 +9,7 @@ from examples.optimtools import Simulator
 from pyDOE2 import fullfact
 
 glider_simulator = GliderSimulator()
-x0 = [0.2, 0.15, 0.18]
+x0 = [0.2, 0.2, 0.2]
 names = ["y_mid_1", "chord_mid_1", "chord_mid_2", "chord_mid_3"]
 
 
