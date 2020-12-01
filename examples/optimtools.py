@@ -25,7 +25,7 @@ class Simulator:
         self.list_callback_inp = []
         self.list_callback_res = []
 
-    def simulate(self, x):
+    def simulate(self, x, verbose=False):
         """Executes the actual simulation and returns the result, while
         updating the lists too. Pass to optimizer without arguments or
         parentheses."""
@@ -41,6 +41,20 @@ class Simulator:
         self.list_calls_inp.append(x)
         self.list_calls_res.append(result)
         self.num_calls += 1
+        if verbose:
+            s1 = ""
+            for comp in x:
+                s1 += f"{comp:10.5e}\t"
+            s1 += f"{result:10.5e}"
+            if not self.num_calls:
+                s0 = ""
+                for j, _ in enumerate(x):
+                    tmp = f"Comp-{j + 1}"
+                    s0 += f"{tmp:10s}\t"
+                s0 += "Objective"
+                print(s0)
+            print(s1)
+
         return result
 
     def __str__(self):
@@ -64,7 +78,7 @@ class Simulator:
         self.list_callback_inp = []
         self.list_callback_res = []
 
-    def callback(self, xk, *_):
+    def callback(self, xk, *args, **kwargs):
         """Callback function that can be used by optimizers of scipy.optimize.
         The third argument "*_" makes sure that it still works when the
         optimizer calls the callback function with more than one argument. Pass

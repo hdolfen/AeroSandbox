@@ -132,60 +132,60 @@ class GliderSimulator:
                         ),
                     ]
                 ),
-                Wing(
-                    name="Horizontal Stabilizer",
-                    x_le=0.6,
-                    y_le=0,
-                    z_le=0.1,
-                    symmetric=True,
-                    xsecs=[
-                        WingXSec(  # root
-                            x_le=0,
-                            y_le=0,
-                            z_le=0,
-                            chord=0.1,
-                            twist=-10,
-                            airfoil=naca0008,
-                            control_surface_type='symmetric',  # Elevator
-                            control_surface_deflection=0,
-                        ),
-                        WingXSec(  # tip
-                            x_le=0.02,
-                            y_le=0.17,
-                            z_le=0,
-                            chord=0.08,
-                            twist=-10,
-                            airfoil=naca0008
-                        )
-                    ]
-                ),
-                Wing(
-                    name="Vertical Stabilizer",
-                    x_le=0.6,
-                    y_le=0,
-                    z_le=0.15,
-                    symmetric=False,
-                    xsecs=[
-                        WingXSec(
-                            x_le=0,
-                            y_le=0,
-                            z_le=0,
-                            chord=0.1,
-                            twist=0,
-                            airfoil=naca0008,
-                            control_surface_type='symmetric',  # Rudder
-                            control_surface_deflection=0,
-                        ),
-                        WingXSec(
-                            x_le=0.04,
-                            y_le=0,
-                            z_le=0.15,
-                            chord=0.06,
-                            twist=0,
-                            airfoil=naca0008
-                        )
-                    ]
-                )
+                # Wing(
+                #     name="Horizontal Stabilizer",
+                #     x_le=0.6,
+                #     y_le=0,
+                #     z_le=0.1,
+                #     symmetric=True,
+                #     xsecs=[
+                #         WingXSec(  # root
+                #             x_le=0,
+                #             y_le=0,
+                #             z_le=0,
+                #             chord=0.1,
+                #             twist=-10,
+                #             airfoil=naca0008,
+                #             control_surface_type='symmetric',  # Elevator
+                #             control_surface_deflection=0,
+                #         ),
+                #         WingXSec(  # tip
+                #             x_le=0.02,
+                #             y_le=0.17,
+                #             z_le=0,
+                #             chord=0.08,
+                #             twist=-10,
+                #             airfoil=naca0008
+                #         )
+                #     ]
+                # ),
+                # Wing(
+                #     name="Vertical Stabilizer",
+                #     x_le=0.6,
+                #     y_le=0,
+                #     z_le=0.15,
+                #     symmetric=False,
+                #     xsecs=[
+                #         WingXSec(
+                #             x_le=0,
+                #             y_le=0,
+                #             z_le=0,
+                #             chord=0.1,
+                #             twist=0,
+                #             airfoil=naca0008,
+                #             control_surface_type='symmetric',  # Rudder
+                #             control_surface_deflection=0,
+                #         ),
+                #         WingXSec(
+                #             x_le=0.04,
+                #             y_le=0,
+                #             z_le=0.15,
+                #             chord=0.06,
+                #             twist=0,
+                #             airfoil=naca0008
+                #         )
+                #     ]
+                # )
             ]
         )
 
@@ -208,12 +208,16 @@ class GliderSimulator:
 
     def modify(self, x):
         """Modifies a list of design variables of the airplane to the elements of x."""
-        self.airplane.wings[0].xsecs[0].airfoil = Airfoil(coordinates=naca_4(x[0], x[1], x[2]))
-        self.airplane.wings[0].xsecs[1].airfoil = Airfoil(coordinates=naca_4(x[0], x[1], x[2]))
+        self.airplane.wings[0].xsecs[0].airfoil = Airfoil(coordinates=naca_4(x[0], x[1], 0.12))
+        self.airplane.wings[0].xsecs[1].airfoil = Airfoil(coordinates=naca_4(x[0], x[1], 0.12))
+        self.airplane.wings[0].xsecs[2].airfoil = Airfoil(coordinates=naca_4(x[0], x[1], 0.12))
         # self.airplane.wings[0].xsecs[2].airfoil = Airfoil(coordinates=naca_4(x[0], x[1], x[2]))
-        self.airplane.wings[0].xsecs[1].y_le = x[2]
-
-        self.ap.op_point.alpha = x[3]
+        tmp = self.airplane.wings[0].xsecs[1]
+        tmp.y_le = x[2]
+        self.airplane.wings[0].xsecs[1].xyz_le = cas.vertcat(tmp.x_le, x[2], tmp.z_le)
+        # self.ap.op_point.alpha = x[3]
+        # self.airplane.wings[1].xsecs[0].twist = x[4]
+        # self.airplane.wings[1].xsecs[1].twist = x[4]
         self.ap.setup(verbose=False)
 
     def simulate(self, x):
@@ -231,9 +235,9 @@ class GliderSimulator:
         lift = sol.value(self.ap.lift_force)
         drag = sol.value(self.ap.drag_force_induced)
         beta = np.arctan(cl / cd)
-        v = np.sqrt(self.weight * self.ap.op_point.velocity ** 2 / (lift * np.cos(beta) + drag * np.sin(beta)))
-        self.output_history.append((cl, cd, cm, v))
-        return cl, cd, cm, v
+        # v = np.sqrt(self.weight * self.ap.op_point.velocity ** 2 / (lift * np.cos(beta) + drag * np.sin(beta)))
+        self.output_history.append((lift, drag, cm))
+        return lift, drag, cm
 
     def area(self, x):
         return Airfoil(coordinates=naca_4(x[0], x[1], x[2])).area()
