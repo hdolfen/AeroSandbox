@@ -3,22 +3,22 @@ import time
 import pickle
 import matplotlib.pyplot as plt
 from pathlib import Path
-from scipy.optimize import minimize
-from examples.glidersimulator import GliderSimulator
+from scipy.optimize import minimize, NonlinearConstraint
+from examples.Project_1.glidersimulator import GliderSimulator
 from examples.optimtools import Simulator
 
 from pyDOE2 import fullfact
 
 glider_simulator = GliderSimulator()
-output = glider_simulator.simulate((0.04, 0.4, 0.12, 5))
-names = ["NACA_m", "NACA_p", "NACA_t", "alpha"]
+output = glider_simulator.simulate((0.04, 0.4, 0.5, 5))
+names = ["NACA_m", "NACA_p", "Taper_edge", "alpha"]
 
 # Full factorial first
 levels = 10
 
 F = np.array((np.linspace(0, 0.09, levels),
               np.linspace(0, 0.90, levels),
-              np.linspace(0, 0.99, levels),
+              np.linspace(0.1, 0.9, levels),
               np.linspace(-3, 15, levels)))
 n = F.shape[0]
 le = fullfact(n*[levels]).astype(int)
@@ -44,7 +44,7 @@ else:
         pickle.dump(FF, f, protocol=pickle.HIGHEST_PROTOCOL)
 
 # Main effects
-obj = FF[:, 4] / FF[:, 5]
+obj = FF[:, 5]
 # obj = FF[:, 4]
 m = np.mean(obj)
 M = np.zeros((n, levels))
@@ -82,23 +82,28 @@ plt.bar(names, np.mean(M_effects, axis=1))
 
 def obj(x):
     output = glider_simulator.simulate(x)
-    return -output[0]/output[1] + 10000000*output[2]**2
+    return output[1]
 
+def con(x):
+    output = glider_simulator.simulate(x)
+    return output[0], output[2]
 
 simulator = Simulator(obj)
 
 
+
 print("Started optimization")
+n_con = NonlinearConstraint(con, (17, -1e-5), (np.inf, 1e-5))
 bounds = [(0, 0.09),
          (0, 0.90),
-         (0, 0.99),
+         (0.01, 0.99),
          (-3, 15)]
-res = minimize(simulator.simulate, np.array([0.04, 0.4, 0.12, 5]), method='L-BFGS-B', bounds=bounds,
-               callback=simulator.callback)
+optim = {}
+res = minimize(simulator.simulate, np.array([0.04, 0.4, 0.5, 5]), method='trust-constr', bounds=bounds,
+               constraints=n_con, callback=simulator.callback())
 
 # Non-gradient
 
-
-
 # Optimize for v
+
 # Optimize for Cd

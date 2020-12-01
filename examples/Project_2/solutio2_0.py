@@ -9,7 +9,7 @@ from examples.optimtools import Simulator
 from pyDOE2 import fullfact
 
 glider_simulator = GliderSimulator()
-x0 = [0.3, 0.2, 0.15, 0.18]
+x0 = [0.2, 0.15, 0.18]
 names = ["y_mid_1", "chord_mid_1", "chord_mid_2", "chord_mid_3"]
 
 
@@ -80,11 +80,15 @@ simulator = Simulator(obj)
 print("Started optimization")
 
 
-n_con = NonlinearConstraint(con, (17,), (np.inf,))
-bounds = [(0.1, 0.60),
-         (0.05, 0.20),
+n_con = NonlinearConstraint(con, (15,), (np.inf,))
+# bounds = [(0.1, 0.60),
+#          (0.05, 0.20),
+#          (0.05, 0.20),
+#          (0.05, 0.20)]
+bounds = [(0.05, 0.20),
          (0.05, 0.20),
          (0.05, 0.20)]
+
 
 res_1 = minimize(simulator.simulate, x0, method='SLSQP', bounds=bounds,
                constraints=n_con, callback=simulator.callback)
@@ -100,7 +104,7 @@ def con(x):
 
 
 
-n_con = NonlinearConstraint(con, (0.1, 0.05, 0.05, 0.05, 17), (0.66, 0.20, 0.20, 0.20, np.inf))
+n_con = NonlinearConstraint(con, (0.05, 0.05, 0.05, 15), (0.20, 0.20, 0.20, np.inf))
 simulator.reset()
 
 res_3 = minimize(simulator.simulate, x0, args={'verbose': True}, method='COBYLA',
@@ -109,7 +113,7 @@ res_3 = minimize(simulator.simulate, x0, args={'verbose': True}, method='COBYLA'
 
 def obj(x):
     output = glider_simulator.simulate(x)
-    if output[0] < 17:
+    if output[0] < 15:
         return np.inf
     else:
         return output[1]
