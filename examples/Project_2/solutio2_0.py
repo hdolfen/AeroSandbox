@@ -9,16 +9,6 @@ from examples.optimtools import Simulator
 from pyDOE2 import fullfact
 
 
-def read_from_pickle(var):
-    file = Path(str(var) + ".pickle")
-    if file.exists():
-        with open(file, "rb") as f:
-            var = pickle.load(f)
-        return True
-    else:
-        return False
-
-
 glider_simulator = GliderSimulator()
 x0 = [0.2, 0.2, 0.2]
 names = ["y_mid_1", "chord_mid_1", "chord_mid_2", "chord_mid_3"]
