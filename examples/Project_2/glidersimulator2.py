@@ -201,7 +201,7 @@ class GliderSimulator:
     def airfoil_area(self, x):
         return Airfoil(coordinates=naca_4(x[0], x[1], x[2])).area()
 
-    def airfoil_Ixx(self, x):
+    def airfoil_ixx(self, x):
         return Airfoil(coordinates=naca_4(x[0], x[1], x[2])).Ixx()
 
     def draw(self):
@@ -210,6 +210,7 @@ class GliderSimulator:
     def aspect_ratio(self):
         ar = self.airplane.wings[0].aspect_ratio()
         return float(ar)
+
 
 if __name__ == '__main__':
     simulator = GliderSimulator()
