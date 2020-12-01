@@ -207,6 +207,22 @@ class GliderSimulator:
         ar = self.airplane.wings[0].aspect_ratio()
         return float(ar)
 
+    def wing_area(self):
+        return self.airplane.wings[0].area()
+
+    def wing_area_2(self, x):
+        chord_root = self.airplane.wings[0].xsecs[0].chord
+        span_1 = self.airplane.wings[0].xsecs[1].y_le
+        span_2 = self.airplane.wings[0].xsecs[2].y_le - self.airplane.wings[0].xsecs[1].y_le
+        span_3 = self.airplane.wings[0].xsecs[3].y_le - self.airplane.wings[0].xsecs[2].y_le
+        s = span_1 * (chord_root + x[0]) * 0.5 + span_2 * (x[1] + x[0]) * 0.5 + span_3 * span_2 * (x[2] + x[1]) * 0.5
+        return s
+
+    def aspect_ratio_2(self, x):
+        b = self.airplane.wings[0].xsecs[-1].y_le
+        ar = b ** 2 / self.wing_area_2(x)
+        return ar
+
 
 if __name__ == '__main__':
     simulator = GliderSimulator()
