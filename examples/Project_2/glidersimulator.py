@@ -84,6 +84,7 @@ class GliderSimulator:
 
         self.weight = 2 * 9.81  # Weight corresponding to 2 kg
         self.sol = None  # Initialize the solution
+        self.sol_history = []
 
         # Define the 3D geometry you want to analyze/optimize.
         # All distances are in meters and all angles are in degrees.
@@ -181,6 +182,7 @@ class GliderSimulator:
     def simulate(self, x):
         for i in range(len(self.design_history)):
             if np.all(x == self.design_history[i]):
+                self.sol = self.sol_history[i]
                 return self.output_history[i]
 
         self.design_history.append(x)
@@ -191,7 +193,7 @@ class GliderSimulator:
         lift = self.sol.value(self.ap.lift_force)
         drag = self.sol.value(self.ap.drag_force_induced)
         self.output_history.append((lift, drag, cm))
-
+        self.sol_history.append(self.sol)
         return lift, drag, cm
 
     def airfoil_area(self, x):
