@@ -145,3 +145,102 @@ def obj_con_bound(x):
 
 simulator = Simulator(obj_con_bound)
 res_6 = minimize(simulator.simulate, x0, method="Nelder-mead", callback=simulator.callback)
+# Restarting it at with an initial guess from previous optimizations can help to decrease it further
+res_6 = minimize(simulator.simulate, res_6.x, method="Nelder-mead", callback=simulator.callback)
+res_6 = minimize(simulator.simulate, res_6.x, method="Nelder-mead", callback=simulator.callback)
+
+print("=== \033[1mAttempt with L-BFGS-B method\033[0m ===")
+
+
+def obj_pen(x, mu):
+    output = glider_simulator.simulate(x)
+    return output[1] + mu*min(0, output[0] - 15)**2
+
+
+simulator = Simulator(lambda x: obj_pen(x, 10))
+res_7 = minimize(simulator.simulate, x0, method='L-BFGS-B', bounds=bounds, callback=simulator.callback,
+                 options={'eps': 1e-3, 'ftol': 1e-20, 'gtol': 1e-20})
+
+
+print("=== \033[1mAttempt with TNC method\033[0m ===")
+simulator.reset()
+res_8 = minimize(simulator.simulate, x0, method='TNC', bounds=bounds, callback=simulator.callback)
+simulator = Simulator(lambda x: obj_pen(x, 1000))
+res_8 = minimize(simulator.simulate, res_8.x, method='TNC', bounds=bounds, callback=simulator.callback,
+                 options={'maxiter': 300})
+
+
+# Multi-objective optimization
+print("=== \033[1mStarted multi-objective optimization\033[0m ===")
+
+
+def is_pareto_efficient_simple(costs):
+    """
+    Find the pareto-efficient points
+    :param costs: An (n_points, n_costs) array
+    :return: A (n_points, ) boolean array, indicating whether each point is Pareto efficient
+    """
+    is_efficient = np.ones(costs.shape[0], dtype = bool)
+    for i, c in enumerate(costs):
+        if is_efficient[i]:
+            is_efficient[is_efficient] = np.any(costs[is_efficient]<c, axis=1)  # Keep any point with a lower cost
+            is_efficient[i] = True  # And keep self
+    return is_efficient
+
+
+ar_list = []
+history = np.vstack((glider_simulator.design_history, FF[:, :3]))
+for design in history:
+    ar_list.append(glider_simulator.aspect_ratio_2(design))
+
+drag_list = np.concatenate((np.array(glider_simulator.output_history)[:, 1], FF[:, 5]))
+lift_list = np.concatenate((np.array(glider_simulator.output_history)[:, 0], FF[:, 4]))
+costs = np.array((drag_list, ar_list)).T
+
+mask = lift_list > 15
+costs = costs[mask]
+
+plt.figure("Pareto")
+plt.plot(costs[:, 0], costs[:, 1], 'bo')
+
+pareto_front = is_pareto_efficient_simple(costs)
+pareto_costs = costs[pareto_front]
+plt.plot(pareto_costs[:, 0], pareto_costs[:, 1], 'ro')
+
+weights = pareto_costs[:, 0] / pareto_costs[:, 1]
+
+
+def obj(x, weights=(1, 1)):
+    obj_1 = glider_simulator.simulate(x)
+    obj_2 = glider_simulator.aspect_ratio_2(x)
+    return weights[0]*obj_1[1] + weights[1]*obj_2
+
+
+weight_space = np.linspace(0, 1, 8)
+zipped_weights = np.array((np.flip(weight_space), weight_space)).T  # First row is most weight to drag
+zipped_weights[:, 0] *= 25  # Magic number, base on DoE of both objectives
+
+# weight_space = np.logspace(np.min(weights), np.max(weights), 8)
+# zipped_weights = np.ones((len(weight_space), 2))
+# zipped_weights[:, 1] = weight_space
+# zipped_weights = np.vstack(((1, 0), zipped_weights, (0, 1)))
+
+x0 = res_3.x
+results = []
+for i, row in enumerate(zipped_weights):
+    print(f"\nSimulation {i + 1} with weights {row}")
+    simulator = Simulator(lambda x: obj(x, weights=row))
+    res = minimize(simulator.simulate, x0, method='trust-constr', bounds=bounds, constraints=n_con,
+                   callback=simulator.callback, options={'xtol': 1e-3, 'gtol': 1e-08})
+    results.append(res.x)
+    x0 = res.x
+
+
+ar_list_pareto = []
+drag_list_pareto = []
+for design in results:
+    ar_list_pareto.append(glider_simulator.aspect_ratio_2(design))
+    drag_list_pareto.append(glider_simulator.simulate(design)[1])
+
+plt.figure("Pareto")
+plt.plot(drag_list_pareto, ar_list_pareto, 'go')
