@@ -1,5 +1,3 @@
-import copy
-
 from aerosandbox import *
 from aerosandbox.library.airfoils import e216, naca0008
 from aerosandbox.geometry.common import cosspace
@@ -79,30 +77,40 @@ airplane = Airplane(
                     x_le=0,  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
                     y_le=0,  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
                     z_le=0,  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
-                    chord=0.18,
-                    twist=2,  # degrees
-                    airfoil=Airfoil(coordinates=naca_4(0.04, 0.4, 0.42)),
+                    chord=0.20,
+                    twist=0,  # degrees
+                    airfoil=Airfoil(coordinates=naca_4(0.04, 0.4, 0.12)),
                     control_surface_type='symmetric',
                     # Flap # Control surfaces are applied between a given XSec and the next one.
                     control_surface_deflection=0,  # degrees
                 ),
-                WingXSec(  # Mid
+                WingXSec(  # Mid 1
                     x_le=0.01,
-                    y_le=0.5,
+                    y_le=0.33,
                     z_le=0,
-                    chord=0.16,
-                    twist=0,
-                    airfoil=Airfoil(coordinates=naca_4(0.04, 0.4, 0.42)),
+                    chord=0.18,
+                    twist=0.0,
+                    airfoil=Airfoil(coordinates=naca_4(0.04, 0.4, 0.12)),
+                    control_surface_type='asymmetric',  # Aileron
+                    control_surface_deflection=0,
+                ),
+                WingXSec(  # Mid 2
+                    x_le=0.02,
+                    y_le=0.66,
+                    z_le=0,
+                    chord=0.18,
+                    twist=-0.0,
+                    airfoil=Airfoil(coordinates=naca_4(0.04, 0.4, 0.12)),
                     control_surface_type='asymmetric',  # Aileron
                     control_surface_deflection=0,
                 ),
                 WingXSec(  # Tip
                     x_le=0.08,
                     y_le=1,
-                    z_le=0.1,
-                    chord=0.08,
-                    twist=-2,
-                    airfoil=e216,
+                    z_le=0.0,
+                    chord=0.18,
+                    twist=0,
+                    airfoil=Airfoil(coordinates=naca_4(0.04, 0.4, 0.12)),
                 ),
             ]
         ),
@@ -203,7 +211,7 @@ ap_sol.substitute_solution(sol)
 
 
 
-# ap_sol.draw()  # Generates
+ap_sol.draw()  # Generates
 
 print("CL:", ap_sol.CL)
 print("CDi:", ap_sol.CDi)
