@@ -128,9 +128,9 @@ def obj_con(x):
 simulator = Simulator(obj_con)
 res_4 = differential_evolution(simulator.simulate, bounds, args=((), {'verbose': True}), workers=-1)
 
-print("\nAttempt with dual annealing method")  # Very slow
-simulator.reset()
-res_5 = dual_annealing(simulator.simulate, bounds, callback=simulator.callback)
+# print("\nAttempt with dual annealing method")  # Very slow
+# simulator.reset()
+# res_5 = dual_annealing(simulator.simulate, bounds, callback=simulator.callback)
 
 print("\nAttempt with Nelder-Mead simplex method")
 
