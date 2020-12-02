@@ -191,7 +191,7 @@ def is_pareto_efficient_simple(costs):
 ar_list = []
 history = np.vstack((glider_simulator.design_history, FF[:, :3]))
 for design in history:
-    ar_list.append(glider_simulator.aspect_ratio_2(design))
+    ar_list.append(glider_simulator.aspect_ratio(design))
 
 drag_list = np.concatenate((np.array(glider_simulator.output_history)[:, 1], FF[:, 5]))
 lift_list = np.concatenate((np.array(glider_simulator.output_history)[:, 0], FF[:, 4]))
@@ -212,7 +212,7 @@ weights = pareto_costs[:, 0] / pareto_costs[:, 1]
 
 def obj(x, weights=(1, 1)):
     obj_1 = glider_simulator.simulate(x)
-    obj_2 = glider_simulator.aspect_ratio_2(x)
+    obj_2 = glider_simulator.aspect_ratio(x)
     return weights[0]*obj_1[1] + weights[1]*obj_2
 
 
@@ -239,7 +239,7 @@ for i, row in enumerate(zipped_weights):
 ar_list_pareto = []
 drag_list_pareto = []
 for design in results:
-    ar_list_pareto.append(glider_simulator.aspect_ratio_2(design))
+    ar_list_pareto.append(glider_simulator.aspect_ratio(design))
     drag_list_pareto.append(glider_simulator.simulate(design)[1])
 
 plt.figure("Pareto")

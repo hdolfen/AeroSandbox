@@ -204,14 +204,14 @@ class GliderSimulator:
         self.ap.substitute_solution(self.sol)
         self.ap.draw()
 
-    def aspect_ratio(self):
+    def _aspect_ratio_check(self):
         ar = self.airplane.wings[0].aspect_ratio()
         return float(ar)
 
-    def wing_area(self):
+    def _wing_area_check(self):
         return self.airplane.wings[0].area(type='projected')
 
-    def wing_area_2(self, x):
+    def wing_area(self, x):
         chord_root = self.airplane.wings[0].xsecs[0].chord
         span_1 = self.airplane.wings[0].xsecs[1].y_le
         span_2 = self.airplane.wings[0].xsecs[2].y_le - self.airplane.wings[0].xsecs[1].y_le
@@ -219,9 +219,9 @@ class GliderSimulator:
         s = span_1 * (chord_root + x[0]) * 0.5 + span_2 * (x[1] + x[0]) * 0.5 + span_3 * (x[2] + x[1]) * 0.5
         return 2*s
 
-    def aspect_ratio_2(self, x):
+    def aspect_ratio(self, x):
         b = self.airplane.wings[0].xsecs[-1].y_le
-        ar = ( 2 * b ) ** 2 / self.wing_area_2(x)
+        ar = ( 2 * b ) ** 2 / self.wing_area(x)
         return ar
 
 
