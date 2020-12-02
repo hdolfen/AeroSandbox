@@ -227,8 +227,9 @@ class GliderSimulator:
         return Airfoil(coordinates=naca_4(x[0], x[1], x[2])).Ixx()
 
     def draw(self):
+        self.modify(self.x_last)
         self.ap.substitute_solution(self.sol)
-        self.ap.draw()
+        self.ap.draw(recalculate_streamlines=True)
 
     def _aspect_ratio_check(self):
         ar = self.airplane.wings[0].aspect_ratio()
