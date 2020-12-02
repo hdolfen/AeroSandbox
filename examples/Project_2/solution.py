@@ -87,9 +87,10 @@ def con(x):
 
 
 n_con = {'type': 'ineq', 'fun': lambda x: con(x) - 15}
+n_con = NonlinearConstraint(con, (15,), (np.inf,))
 
-res_1 = minimize(simulator.simulate, x0, method='SLSQP', bounds=bounds, constraints=n_con, callback=simulator.callback,
-                 tol=1e-8, options={'ftol': 1e-8})
+res_1 = minimize(simulator.simulate, [0.175, 0.15, 0.09], method='SLSQP', bounds=bounds, constraints=n_con, callback=simulator.callback,
+                 tol=1e-6, options={'ftol': 1e-6, 'eps': 1e-6})
 
 print("\nAttempt with COBYLA method")
 
@@ -139,7 +140,7 @@ def obj_con_bound(x):
     if np.any(x < np.array(bounds)[:, 0]) or np.any(x > np.array(bounds)[:, 1]):
         return np.inf
     else:
-        return obj(x)
+        return obj_con(x)
 
 
 simulator = Simulator(obj_con_bound)
