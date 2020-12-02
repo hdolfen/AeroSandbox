@@ -1,7 +1,6 @@
 import os
 import sys
 from aerosandbox.geometry import Airplane, Wing, WingXSec, Airfoil
-from aerosandbox.library.airfoils import naca0008
 from aerosandbox.geometry.common import cosspace
 from aerosandbox.aerodynamics import Casvlm1
 from aerosandbox.performance import OperatingPoint
@@ -76,6 +75,15 @@ class HiddenPrints:
 
 
 class GliderSimulator:
+    """Simulator for the Numerical Optimization project.
+    
+    Example
+    -------
+    >>> glider_simulator = GliderSimulator()    
+    >>> x = [0.2, 0.2, 0.2]    
+    >>> lift, drag, cm = glider_simulator.simulate(x)
+    """
+
     def __init__(self):
         self.opti = cas.Opti()  # Initialize an analysis/optimization environment
         self.opti.solver('ipopt')
@@ -85,6 +93,7 @@ class GliderSimulator:
         self.weight = 2 * 9.81  # Weight corresponding to 2 kg
         self.sol = None  # Initialize the solution
         self.sol_history = []
+        self.x_last = None
 
         # Define the 3D geometry you want to analyze/optimize.
         # All distances are in meters and all angles are in degrees.
@@ -180,6 +189,21 @@ class GliderSimulator:
         self.ap.setup(verbose=False)
 
     def simulate(self, x):
+        """Function to execute the simulation of the glider simulator with
+        input x.
+
+        Parameters
+        ----------
+        x : array or array-like
+            The input chords as design variables, x[0] is the chord at 
+            y = 0.33, x[1] at y = 0.66 and x[2] at the tip.
+
+        Returns
+        -------
+        lift, drag, cm
+        """
+        self.x_last = x
+
         for i in range(len(self.design_history)):
             if np.all(x == self.design_history[i]):
                 self.sol = self.sol_history[i]
@@ -222,6 +246,24 @@ class GliderSimulator:
         return 2*s
 
     def aspect_ratio(self, x):
+        """Function to compute the aspect ratio corresponding to the input x.
+
+        Parameters
+        ----------
+        x : array or array-like
+            The input chords as design variables, x[0] is the chord at 
+            y = 0.33, x[1] at y = 0.66 and x[2] at the tip.
+
+        Returns
+        -------
+        ar: float
+            The aspect ratio of the glider.
+            
+        Example
+        -------
+        >>> ar = glider_simulator.aspect_ratio(x)
+
+        """
         b = self.airplane.wings[0].xsecs[-1].y_le
         ar = ( 2 * b ) ** 2 / self.wing_area(x)
         return ar
