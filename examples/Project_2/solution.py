@@ -16,7 +16,7 @@ names = ["chord_mid_1", "chord_mid_2", "chord_mid_3"]
 # Design of experiments full factorial
 print("=== \033[1mDesign of experiments\033[0m ===")
 
-levels = 10
+levels = 30
 
 F = np.array((np.linspace(0.05, 0.20, levels),
               np.linspace(0.05, 0.20, levels),
