@@ -270,6 +270,9 @@ class GliderSimulator:
 
 
 if __name__ == '__main__':
-    simulator = GliderSimulator()
-    output = simulator.simulate((0.18, 0.18, 0.18))
-    simulator.draw()
+    glider_simulator = GliderSimulator()
+    output = glider_simulator.simulate((0.20, 0.20, 0.20))
+    print("Output:")
+    print(f"Lift: {output[0]}")
+    print(f"Drag: {output[1]}")
+    glider_simulator.draw()
