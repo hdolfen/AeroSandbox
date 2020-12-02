@@ -4,7 +4,7 @@ import pickle
 import matplotlib.pyplot as plt
 from pathlib import Path
 from scipy.optimize import minimize, NonlinearConstraint, differential_evolution, dual_annealing
-from examples.Project_2.glidersimulator2 import GliderSimulator
+from examples.Project_2.glidersimulator import GliderSimulator
 from examples.optimtools import Simulator
 from pyDOE2 import fullfact
 

@@ -83,6 +83,7 @@ class GliderSimulator:
         self.output_history = []
 
         self.weight = 2 * 9.81  # Weight corresponding to 2 kg
+        self.sol = None  # Initialize the solution
 
         # Define the 3D geometry you want to analyze/optimize.
         # All distances are in meters and all angles are in degrees.
@@ -105,7 +106,7 @@ class GliderSimulator:
                             x_le=0,  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
                             y_le=0,  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
                             z_le=0,  # Coordinates of the XSec's leading edge, relative to the wing's leading edge.
-                            chord=0.18,
+                            chord=0.20,
                             twist=0,  # degrees
                             airfoil=Airfoil(coordinates=naca_4(0.04, 0.4, 0.12)),
                             control_surface_type='symmetric',
@@ -185,12 +186,11 @@ class GliderSimulator:
         self.design_history.append(x)
         with HiddenPrints(True):
             self.modify(x)
-            sol = self.opti.solve()
-        cm = sol.value(self.ap.Cm)
-        lift = sol.value(self.ap.lift_force)
-        drag = sol.value(self.ap.drag_force_induced)
+            self.sol = self.opti.solve()
+        cm = self.sol.value(self.ap.Cm)
+        lift = self.sol.value(self.ap.lift_force)
+        drag = self.sol.value(self.ap.drag_force_induced)
         self.output_history.append((lift, drag, cm))
-        self.ap.substitute_solution(sol)
 
         return lift, drag, cm
 
@@ -201,6 +201,7 @@ class GliderSimulator:
         return Airfoil(coordinates=naca_4(x[0], x[1], x[2])).Ixx()
 
     def draw(self):
+        self.ap.substitute_solution(self.sol)
         self.ap.draw()
 
     def aspect_ratio(self):
@@ -208,19 +209,19 @@ class GliderSimulator:
         return float(ar)
 
     def wing_area(self):
-        return self.airplane.wings[0].area()
+        return self.airplane.wings[0].area(type='projected')
 
     def wing_area_2(self, x):
         chord_root = self.airplane.wings[0].xsecs[0].chord
         span_1 = self.airplane.wings[0].xsecs[1].y_le
         span_2 = self.airplane.wings[0].xsecs[2].y_le - self.airplane.wings[0].xsecs[1].y_le
         span_3 = self.airplane.wings[0].xsecs[3].y_le - self.airplane.wings[0].xsecs[2].y_le
-        s = span_1 * (chord_root + x[0]) * 0.5 + span_2 * (x[1] + x[0]) * 0.5 + span_3 * span_2 * (x[2] + x[1]) * 0.5
-        return s
+        s = span_1 * (chord_root + x[0]) * 0.5 + span_2 * (x[1] + x[0]) * 0.5 + span_3 * (x[2] + x[1]) * 0.5
+        return 2*s
 
     def aspect_ratio_2(self, x):
         b = self.airplane.wings[0].xsecs[-1].y_le
-        ar = b ** 2 / self.wing_area_2(x)
+        ar = ( 2 * b ) ** 2 / self.wing_area_2(x)
         return ar
 
 
